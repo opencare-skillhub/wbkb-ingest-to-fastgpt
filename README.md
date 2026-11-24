@@ -66,6 +66,43 @@ python3 "$S" all --url "<分享链接>" --out ~/Downloads/mykb --token "<token>"
 
 细节与踩坑见 `SKILL.md` 和 `references/pipeline-details.md`。
 
+## 给 AI 的部署提示词
+
+把下面整段发给 AI（WorkBuddy / Codex / Claude 等），它会完成安装并自行核对凭据：
+
+```text
+请帮我部署 wbkb-ingest-to-fastgpt 技能。
+
+1. 克隆仓库到技能目录：
+   git clone https://github.com/opencare-skillhub/wbkb-ingest-to-fastgpt.git ~/.workbuddy/skills/wbkb-ingest-to-fastgpt
+   （若目录已存在，先备份原有 .env / 自定义配置，不要覆盖。）
+   确认 SKILL.md / scripts/wbkb_ingest.py / references/ 均在位，跑一次 py_compile 确认脚本语法。
+
+2. 检查并安装依赖：
+   - mineru-open-api CLI（没有则 npm i -g mineru-open-api），确认 mineru-open-api version 可用。
+   - fastgpt-kb-sync 技能：~/.workbuddy/skills/fastgpt-kb-sync/scripts/fgkb.py 存在。
+   - WorkBuddy library 技能内置，无需安装。
+
+3. 检查并匹配凭据 —— 这一步务必逐项核对，不要跳过：
+   - 默认凭据文件必须是 ~/.agents/skills/fastgpt-content-processor/.env。
+     先确认它存在；若不存在，询问我路径，或用 --env-file / 环境变量 FASTGPT_ENV_FILE 指定。
+   - 读取并核对三个键：FASTGPT_BASE_URL、FASTGPT_API_KEY、FASTGPT_DATASET_ID。
+     缺任何一个就停下告诉我，不要猜、不要写死到仓库里。
+   - 注意本机可能存在多份 FastGPT 凭据（如 ~/.zshrc 里的 FASTGPT_APIKEY、~/.env 里的 FGKB_*），
+     它们可能不同。本技能以 fastgpt-content-processor/.env 为准；如发现其它来源与它不一致，提示我确认。
+   - 用该 Key 调 fgkb.py ls-datasets 验证可用，并确认目标知识库 ID 出现在可见列表中。
+     绝不打印或回显完整 API Key。
+   - 目标库 ID：若我未指定，用凭据文件里的 FASTGPT_DATASET_ID；若我指定了，用 --dataset-id 覆盖。
+
+4. 验证部署（只跑 dry-run，不写库）：
+   python3 ~/.workbuddy/skills/wbkb-ingest-to-fastgpt/scripts/wbkb_ingest.py sync \
+     --source-dir <待上传目录> --only '**/*.md' --dataset-id <目标库ID> --dry-run
+   确认它能扫描到文件、且无「缺少配置 / 未授权」报错后，部署才算完成。
+
+完成后简要汇报：仓库与版本、依赖检查结果、凭据来源与匹配情况（Key 只显示前后几位）、
+dry-run 结果。有任何不一致先停下问我，不要自行更换凭据或更换目标库。
+```
+
 ## 安全边界
 
 - 凭据只从本机 `.env` 读取，仓库只含 `.env.example` 占位符。
