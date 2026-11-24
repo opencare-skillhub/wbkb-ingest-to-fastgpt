@@ -91,6 +91,7 @@ python3 .../wbkb_ingest.py all --url "..." --out ~/Downloads/小巢宝子 --toke
 | `fgkb` 报缺 API Key | 检查 `~/.agents/skills/fastgpt-content-processor/.env` 是否存在且含 `FASTGPT_API_KEY` |
 | 同步混入 PDF | 加 `--only '**/*.md'` |
 | `--dataset-id` 没生效 | 本脚本经 `FGKB_DATASET_ID` 环境变量传给 fgkb，不要直接给 fgkb 传该参数（它不认） |
+| 单个 md 上传反复 `read operation timed out` | 文件名含 `%`、全角 `＜` 等特殊字符会卡住 FastGPT；复制成 ASCII 文件名再传 |
 
 ## 文件结构
 - `scripts/wbkb_ingest.py` — 一站式 CLI（download/convert/clean/sync/all）
